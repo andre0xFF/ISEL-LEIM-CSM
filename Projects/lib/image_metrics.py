@@ -3,10 +3,10 @@ import os
 
 
 def compression_rate(filepath1: str, filepath2: str):
-    originial_size = os.path.getsize(filepath1)
+    original_size = os.path.getsize(filepath1)
     compressed_size = os.path.getsize(filepath2)
 
-    return (originial_size / compressed_size, originial_size, compressed_size)
+    return (original_size / compressed_size, original_size, compressed_size)
 
 
 def power(image: np.ndarray):
