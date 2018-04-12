@@ -10,7 +10,7 @@ def main():
     ex1(img)
     ex2(img, path)
     img_gray = ex3(img, path)
-    ex4(img_gray)
+    # ex4(img_gray)
     ex5(img_gray)
     ex6(img_gray)
     ex7()
@@ -93,17 +93,39 @@ def ex6(img):
 
 
 def ex7():
-    size = 100
-    # We need 8 bits to represent 255 and there are no negatives
-    blank_img = np.ones(shape=(size, size, 3), dtype=np.uint8) * 255
+    canvas = np.ones((500, 500, 3), dtype=np.uint8) * 255
 
-    # cv2.fillPoly(blank_img, [(10, 10), (10, 100), (100, 10), (100, 100)], 0)
-    #
-    # step = 0.01
-    #
-    # for i in np.arange(0, np.pi / 4, step):
-    #     points = np.array([(0, 0), (0, 0), (), ()])
-    #     print(i)
+    # white, black colors
+    colors = [np.ones(3) * 255, np.zeros(3)]
+
+    index = 0
+    pixel = 1
+    limit = 500
+    start = 0
+
+    # Optical illusion
+    for x in np.arange(start, limit, 2):
+        image = cv2.line(canvas, (256, 256), (x, start), (colors[index]), pixel)
+        image = cv2.line(canvas, (256, 256), (limit, x), (colors[index]), pixel)
+        image = cv2.line(canvas, (256, 256), (limit - x, limit), (colors[index]), pixel)
+        image = cv2.line(canvas, (256, 256), (start, limit - x), (colors[index]), pixel)
+
+    # Draw image
+    plt.figure(figsize=(30, 20))
+    plt.imshow(image)
+    plt.axis("off")
+    plt.show()
+
+    # Illusion
+    scale = 100
+    x = np.arange(-500, 500, 1)
+    y = np.arange(-500, 500, 1) * 1j
+    x, y = np.meshgrid(x, y)
+    z = x + y
+
+    lines = np.floor(np.angle(z) * scale).astype(np.int32) % 2 * 255
+    plt.imshow(lines, cmap = "gray")
+    plt.show()
 
 
 def ex8():
