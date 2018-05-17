@@ -25,5 +25,5 @@ def analyze(raw_image: np.array, decoded_image: np.array):
 
 if __name__ == "__main__":
     main(
-        image="data/raw/Lena.tif"
+        image="../data/raw/Lena.tif"
     )
