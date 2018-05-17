@@ -27,11 +27,11 @@ def encode(raw_image: np.array) -> (np.array, np.int):
 
 # Decodes a binary stream
 # Returns: Decoded raw image
-def decode(encoded_image: np.array) -> (np.array):
-    return None
+def decode(encoded_image: np.array) -> np.array:
+    pass
 
 
-def apply_subsample(image: np.array, sample_size: int, horizontal_ratio: int, vertical_ratio: int) -> (np.array):
+def apply_subsample(image: np.array, sample_size: int, horizontal_ratio: int, vertical_ratio: int) -> np.array:
     pass
 
 
@@ -41,22 +41,22 @@ def make_blocks(image: np.array) -> (np.array, np.int):
     pass
 
 
-def entropic_encoding(block_dc: np.array, block_ac: np.array) -> (np.array):
+def entropic_encoding(block_dc: np.array, block_ac: np.array) -> np.array:
     # Merges DC with AC and append's eob
     pass
 
 
 # EOB: end of block
-def append_eob(block: np.array) -> (np.array):
+def append_eob(block: np.array) -> np.array:
     # Appends the eob code to a single block
     pass
 
 
-def make_image(blocks: np.array) -> (np.array):
+def make_image(blocks: np.array) -> np.array:
     # Assemble an image from multiple bit streams (blocks)
     # EOB delimits each block
     pass
 
 
-def entropic_decoding(bit_stream: np.array) -> (np.array):
+def entropic_decoding(bit_stream: np.array) -> np.array:
     pass
