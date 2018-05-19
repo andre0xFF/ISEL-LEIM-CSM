@@ -51,12 +51,12 @@ def _test():
     print("[INFO] Encoding")
     encoded = encode(block, 50)
 
-    print("{}".format(encoded))
+    print("Encoded block: \n{}".format(encoded))
 
     print("[INFO] Decoding")
     decoded = decode(encoded, 50)
 
-    print("{}".format(decoded))
+    print("Decoded block: \n{}".format(decoded))
 
 
 if __name__ == "__main__":
