@@ -2,17 +2,19 @@ import numpy as np
 
 
 def quality_factor(q: float) -> float:
+
     if q >= 100:
-        return 1
+        q = 100
 
-    if q <= 50:
-        return 50 / q
+    if q < 1:
+        q = 1
 
-    return 2 - (q * 2) / 100
+    return q / 100
 
 
 def get_luminance_matrix() -> np.array:
-    # k1 is the luminance matrix
+    # tab_jpeg
+    # table K1 - Luminance quantize Matrix
     k1 = np.zeros((8, 8))
     k1[0] = [16, 11, 10, 16, 24, 40, 51, 61]
     k1[1] = [12, 12, 14, 19, 26, 58, 60, 55]
@@ -22,13 +24,12 @@ def get_luminance_matrix() -> np.array:
     k1[5] = [24, 35, 55, 64, 81, 104, 113, 92]
     k1[6] = [49, 64, 78, 87, 103, 121, 120, 101]
     k1[7] = [72, 92, 95, 98, 112, 100, 103, 99]
-
     return k1
 
 
 def encode(block: np.array, factor: float) -> np.array:
     k = get_luminance_matrix()
-    return np.round(block / (k * quality_factor(factor)))
+    return np.round(block / (k * quality_factor(factor))).astype(np.int32)
 
 
 def decode(block: np.array, factor: float) -> np.array:
@@ -37,24 +38,25 @@ def decode(block: np.array, factor: float) -> np.array:
 
 
 def _test():
+
     block = np.array([
-        [ 1337,  56, -27,  18,  78, -60,  27, -27],
-        [  -38, -27,  13,  44,  32,  -1, -24, -10],
-        [  -20, -17,  10,  33,  21,  -6, -16,  -9],
-        [  -10,  -8,   9,  17,   9, -10, -13,   1],
-        [   -6,   1,   6,   4,  -3,  -7,  -5,   5],
-        [    2,   3,   0,  -3,  -7,  -4,   0,   3],
-        [    4,   4,  -1,  -2,  -9,   0,   2,   4],
-        [    3,   1,   0,  -4,  -2,  -1,   3,   1]
+        [1337, 56, -27, 18, 78, -60, 27, -27],
+        [-38, -27, 13, 44, 32, -1, -24, -10],
+        [-20, -17, 10, 33, 21, -6, -16, -9],
+        [-10, -8, 9, 17, 9, -10, -13, 1],
+        [-6, 1, 6, 4, -3, -7, -5, 5],
+        [2, 3, 0, -3, -7, -4, 0, 3],
+        [4, 4, -1, -2, -9, 0, 2, 4],
+        [3, 1, 0, -4, -2, -1, 3, 1]
     ])
 
     print("[INFO] Encoding")
-    encoded = encode(block, 50)
+    encoded = encode(block, 100)
 
     print("Encoded block: \n{}".format(encoded))
 
     print("[INFO] Decoding")
-    decoded = decode(encoded, 50)
+    decoded = decode(encoded, 100)
 
     print("Decoded block: \n{}".format(decoded))
 
