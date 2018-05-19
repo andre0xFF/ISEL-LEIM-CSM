@@ -9,11 +9,13 @@ import numpy as np
 # Encodes a raw image
 # Returns: Encoded images and number of blocks per line
 def encode(raw_image: np.array, factor: float) -> (np.array, np.int):
+
+    raw_image = crop_image(raw_image, factor)
     sampled_image = apply_subsample(raw_image, 4, 2, 0)
     ycc_image = ycc.encode(sampled_image)
-    blocks = make_blocks(ycc_image)
-    dc_elements = np.zeros(len(blocks))
+    blocks, line_dim, col_dim = make_blocks(ycc_image)
     previous_quantified_block = None
+    bit_stream = ''
 
     for i in range(len(blocks)):
 
@@ -21,26 +23,57 @@ def encode(raw_image: np.array, factor: float) -> (np.array, np.int):
         block_quantification = quantification.encode(block_dct, factor)
 
         if i == 0:
-            dc_elements[i] = dc.encode(None, block_quantification)
+            bit_stream += dc.encode(None, block_quantification)
         else:
-            dc_elements[i] = dc.encode(previous_quantified_block, block_quantification)
+            bit_stream += dc.encode(previous_quantified_block, block_quantification)
 
-        block_ac = ac.encode(block_quantification)
+        bit_stream += ac.encode(block_quantification)
+
         previous_quantified_block = block_quantification.copy()
 
-        entropic_encoding(dc_elements, block_ac)
-
-    return None
+    return bit_stream
 
 
 # Decodes a binary stream
 # Returns: Decoded raw image
-def decode(encoded_image: np.array) -> np.array:
-    pass
+def decode(encoded_image: str) -> np.array:
+    m_size = 8
+    n_lines = int(encoded_image[0: 10], 2)
+    n_cols = int(encoded_image[10: 20], 2)
+    reconstructed_image = np.zeros((1, n_lines * m_size, n_cols * m_size))
+    i = 0
+    row = 0
+    col = 0
+
+    while encoded_image != '':
+
+        dc_value, encoded_image = dc.decode(encoded_image)
+        block, encoded_image = ac.decode(encoded_image)
+        block[0][0] = dc_value
+        apply_block(reconstructed_image, block, row, col, m_size)
+
+        col = ((col + 1) * m_size) % n_cols
+        if col == 0:
+            row = (row + 1) * m_size
+        i += 1
+
+    return reconstructed_image
 
 
-def apply_subsample(image: np.array, sample_size: int, horizontal_ratio: int, vertical_ratio: int) -> np.array:
-    pass
+def apply_subsample(image: np.array, horizontal_ratio: int, vertical_ratio: int, sample_size: int = 4) -> np.array:
+    rows, columns = image.shape
+    x = 0
+    y = 0
+    for row in range(rows):
+        for col in range(columns):
+            if x < rows and y < columns:
+                sub_matrix = np.ones((1, horizontal_ratio, vertical_ratio)) * image[x][y]
+                image = apply_block(image, sub_matrix, x, y, 2)
+                y += vertical_ratio
+        x += horizontal_ratio
+        y = 0
+
+    return image
 
 
 def crop_image(image, factor):
@@ -56,7 +89,7 @@ def crop_image(image, factor):
 
 
 def make_blocks(image: np.array, factor: np.int = 8) -> (np.array, np.int):
-    image = crop_image(image, factor)
+
     total_lines, total_columns = image.shape
     total_blocks_h = np.int(total_columns / factor)
     total_blocks_v = np.int(total_lines / factor)
@@ -77,25 +110,18 @@ def make_block(matrix, row, column, factor):
     return matrix[row: row + factor, column: column + factor]
 
 
-def make_image(blocks: np.array) -> np.array:
-    # Assemble an image from multiple bit streams (blocks)
-    # EOB delimits each block
-    pass
-
-
-def entropic_encoding(block_dc: np.array, block_ac: np.array) -> np.array:
-    # Merges DC with AC and append's eob
-    pass
-
-
-def entropic_decoding(bit_stream: np.array) -> np.array:
-    pass
+def apply_block(matrix, block, line, col, dim):
+    matrix[line: line + dim, col : col + dim] = block
+    return matrix
 
 
 def _test():
     image = np.reshape(np.arange(256), (16, 16))
     blocks = make_blocks(image)
     print(blocks)
+
+    image = apply_subsample(image, 2, 2)
+    print(image)
 
 
 if __name__ == "__main__":
