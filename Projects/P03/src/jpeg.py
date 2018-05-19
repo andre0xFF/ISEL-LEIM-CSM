@@ -43,53 +43,38 @@ def apply_subsample(image: np.array, sample_size: int, horizontal_ratio: int, ve
     pass
 
 
-def __apply_image_croping(image, mod_factor):
-    line_dim, col_dim = image.shape
+def crop_image(image, factor):
+    image = np.copy(image)
+    total_lines, total_columns = image.shape
 
-    paddingLines = line_dim % mod_factor
-    paddingCols = col_dim % mod_factor
+    excess_lines = total_lines % factor
+    excess_columns = total_columns % factor
 
-    for i in range(paddingLines):
-        image = np.delete(image, line_dim - 1, 0)
-        line_dim -= 1
-
-    for i in range(paddingCols):
-        image = np.delete(image, col_dim - 1, 1)
-        col_dim -= 1
+    image = image[0: total_lines - excess_lines, 0: total_columns - excess_columns]
 
     return image
 
 
-def make_blocks(image: np.array) -> (np.array, np.int):
+def make_blocks(image: np.array, factor: np.int = 8) -> (np.array, np.int):
+    image = crop_image(image, factor)
+    total_lines, total_columns = image.shape
+    total_blocks_h = np.int(total_columns / factor)
+    total_blocks_v = np.int(total_lines / factor)
+    total_blocks = total_blocks_h * total_blocks_v
+    blocks = np.zeros((total_blocks, factor, factor))
 
-    m_size = 8
-    image = __apply_image_croping(image, m_size) * 1.0
-
-    line_dim, col_dim = image.shape
-    number_of_blocks = int(line_dim / m_size) * int(col_dim / m_size)
-    blocks = np.zeros((number_of_blocks, 8, 8))
     i = 0
 
-    for line in range(int(line_dim / m_size)):
-        for col in range(int(col_dim / m_size)):
-            blocks[i] = __get_submatrix(image, line * m_size, col * m_size, m_size)
-            i += 1
+    for row in range(total_blocks_v):
+        for column in range(total_blocks_h):
+            blocks[i] = make_block(image, row * factor, column * factor, factor)
+            i = i + 1
 
     return blocks
 
 
-def __get_submatrix(matrix, line, col, dim):
-    return matrix[line: line + dim, col: col + dim]
-
-def entropic_encoding(block_dc: np.array, block_ac: np.array) -> np.array:
-    # Merges DC with AC and append's eob
-    pass
-
-
-# EOB: end of block
-def append_eob(block: np.array) -> np.array:
-    # Appends the eob code to a single block
-    pass
+def make_block(matrix, row, column, factor):
+    return matrix[row: row + factor, column: column + factor]
 
 
 def make_image(blocks: np.array) -> np.array:
@@ -98,5 +83,20 @@ def make_image(blocks: np.array) -> np.array:
     pass
 
 
+def entropic_encoding(block_dc: np.array, block_ac: np.array) -> np.array:
+    # Merges DC with AC and append's eob
+    pass
+
+
 def entropic_decoding(bit_stream: np.array) -> np.array:
     pass
+
+
+def _test():
+    image = np.reshape(np.arange(256), (16, 16))
+    blocks = make_blocks(image)
+    print(blocks)
+
+
+if __name__ == "__main__":
+    _test()
