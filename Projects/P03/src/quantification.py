@@ -7,8 +7,8 @@ import numpy as np
 # q = 50 -> 1
 # q = 100 -> 0
 def quality_factor(q: np.int) -> np.float:
-    if q == 0:
-        q = 1
+    if q <= 0:
+        return None
 
     if q <= 50:
         return 50.0 / q
