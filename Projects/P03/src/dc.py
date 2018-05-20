@@ -1,9 +1,8 @@
 import numpy as np
 
 
-def get_dc_coefficient_table():
-    # Table K3
-    # Table for luminance DC coefficient differences
+def dc_keys():
+    # k3 is the luminance DC coefficients
     k3 = dict()
     k3[0] = "00"
     k3[1] = "010"
@@ -21,49 +20,106 @@ def get_dc_coefficient_table():
     return k3
 
 
-def encode(previous_block: np.array, current_block: np.array) -> str:
+def binary_dc(bits: str) -> np.int:
+    k3 = dc_keys()
 
-    dct_current_value = current_block[0][0]
-    k3 = get_dc_coefficient_table()
-
-    signal_bit = '0'
-
-    if previous_block is None:
-        bit_repr = signal_bit + "{0:b}".format(dct_current_value)
-        return k3[len(bit_repr)-1] + bit_repr
-
-    dct_current_value = current_block[0][0] - previous_block[0][0]
-
-    if dct_current_value < 0:
-        signal_bit = '1'
-
-    bit_repr = signal_bit + "{0:b}".format(np.abs(dct_current_value))
-
-    return k3[len(bit_repr)-1] + bit_repr
-
-
-def decode(bit_stream: str):
-
-    k3 = get_dc_coefficient_table()
-
-    bit_value = ''
-
-    for i in range(len(bit_stream)):
-        bit_value += bit_stream[i]
-        for key, value in k3.items():
-            if value == bit_value:
-                bit_signal = bit_stream[i + 1]
-                dc_value = int(bit_stream[i + 2: i + 2 + key], 2)
-                dc_value = dc_value if bit_signal == '0' else -dc_value
-                return dc_value, bit_stream[i + 2 + key: len(bit_stream)]
+    for key in range(len(k3)):
+        if bits == k3[key]:
+            return key
 
     return None
 
 
-if __name__ == "__main__":
+def encode(previous_block: np.array, block: np.array) -> np.int:
+    if previous_block is None:
+        return block[0][0]
 
-    bit_stream_test = '11110010100001110111'
-    dc_val, ac_val = decode(bit_stream_test)
-    print(dc_val)
-    print("")
-    print(ac_val)
+    return block[0][0] - previous_block[0][0]
+
+
+def decode(bit_stream: str) -> (np.int, str):
+    size_bits = bit_stream[0]
+    size = 0
+    index = 0
+
+    # Find the DC size value
+    for i in range(len(bit_stream)):
+        size = binary_dc(size_bits)
+
+        if size is not None:
+            index = i
+            break
+
+        size_bits = "{}{}".format(size_bits, bit_stream[i])
+
+    if index == 0:
+        return None
+
+    # Get and convert the signal
+    signal_bits = bit_stream[index]
+    signal = 1 if signal_bits == "0" else -1
+
+    # Get and convert the DC value
+    dc_bits = bit_stream[index + 1: index + size]
+    dc = np.int(dc_bits, 2)
+
+    # DC value may be negative or positive,
+    # The rest of the bit_stream still needs to be decoded
+    return (
+        dc * signal,
+        bit_stream[index + size:]
+    )
+
+
+def _test():
+    block_0 = np.array([
+        [80, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
+    block_1 = np.array([
+        [80, 2, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
+    block_2 = np.array([
+        [78, 1, 0, -1, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
+    print("[INFO] Encoding block_0, block_1, block_2")
+    dc = np.zeros(3)
+    dc[0] = encode(None, block_0)
+    dc[1] = encode(block_0, block_1)
+    dc[2] = encode(block_1, block_2)
+
+    print("[INFO] DC encoding {}".format(dc))
+
+    print("[INFO] Decoding '{}'".format("11110 0 1010000 1100 1 1010 00"))
+    dc, bit_stream = decode("111100101000011001101000")
+
+    print("[INFO] Decoded DC: {}".format(dc))
+    print("[INFO] Rest of bit stream: {}".format(bit_stream))
+
+
+if __name__ == "__main__":
+    _test()
+
