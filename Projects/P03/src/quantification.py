@@ -1,20 +1,23 @@
 import numpy as np
 
 
-def quality_factor(q: float) -> float:
-
-    if q >= 100:
-        q = 100
-
-    if q < 1:
+# q is inversely proportional to the quality factor
+# q = 1 -> 50
+# q = 2 -> 25
+# q = 50 -> 1
+# q = 100 -> 0
+def quality_factor(q: np.int) -> np.float:
+    if q == 0:
         q = 1
 
-    return q / 100
+    if q <= 50:
+        return 50.0 / q
+
+    return 2.0 - (q * 2.0) / 100.0
 
 
 def get_luminance_matrix() -> np.array:
-    # tab_jpeg
-    # table K1 - Luminance quantize Matrix
+    # k1 Luminance matrix
     k1 = np.zeros((8, 8))
     k1[0] = [16, 11, 10, 16, 24, 40, 51, 61]
     k1[1] = [12, 12, 14, 19, 26, 58, 60, 55]
@@ -24,21 +27,21 @@ def get_luminance_matrix() -> np.array:
     k1[5] = [24, 35, 55, 64, 81, 104, 113, 92]
     k1[6] = [49, 64, 78, 87, 103, 121, 120, 101]
     k1[7] = [72, 92, 95, 98, 112, 100, 103, 99]
+
     return k1
 
 
-def encode(block: np.array, factor: float) -> np.array:
+def encode(block: np.array, factor: np.int) -> np.array:
     k = get_luminance_matrix()
     return np.round(block / (k * quality_factor(factor))).astype(np.int32)
 
 
-def decode(block: np.array, factor: float) -> np.array:
+def decode(block: np.array, factor: np.int) -> np.array:
     k = get_luminance_matrix()
     return block * (k * quality_factor(factor))
 
 
 def _test():
-
     block = np.array([
         [1337, 56, -27, 18, 78, -60, 27, -27],
         [-38, -27, 13, 44, 32, -1, -24, -10],
@@ -51,12 +54,12 @@ def _test():
     ])
 
     print("[INFO] Encoding")
-    encoded = encode(block, 100)
+    encoded = encode(block, 50)
 
     print("Encoded block: \n{}".format(encoded))
 
     print("[INFO] Decoding")
-    decoded = decode(encoded, 100)
+    decoded = decode(encoded, 50)
 
     print("Decoded block: \n{}".format(decoded))
 
