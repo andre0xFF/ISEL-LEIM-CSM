@@ -1,26 +1,21 @@
-import jpeg
-import cv2
-import numpy as np
+from cv2 import imread
+
+from jpeg import JPEG
 
 
 def main(image: str):
     print("Reading image from file {}".format(image))
-    raw_image = cv2.imread(image)
-    encoded_image = jpeg.encode(raw_image)
+    raw_image = imread(image)
+
+    print("Encoding image with JPEG")
+    image = JPEG(image=raw_image)
+    image.encode()
 
     # TODO: Write encoded_image to file
     # TODO: Read previous file
-
-    decoded_image = jpeg.decode(encoded_image)
-
-    analyze(raw_image, decoded_image)
-
-    # TODO: Write decoded_image to file
-
-
-def analyze(raw_image: np.array, decoded_image: np.array):
-    # TODO: Compare both images and calculate metrics
-    pass
+    # TODO: Decode
+    # TODO: Analytics
+    # TODO: Write decoded to file
 
 
 if __name__ == "__main__":
