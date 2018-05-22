@@ -220,9 +220,9 @@ zigzag[4] = [10, 19, 23, 32, 39, 45, 52, 54]
 zigzag[5] = [20, 22, 33, 38, 46, 51, 55, 60]
 zigzag[6] = [21, 34, 37, 47, 50, 56, 59, 61]
 zigzag[7] = [35, 36, 48, 49, 57, 58, 62, 63]
-#índice para ordenar valores de array 1D em zigzag
-ind_O = zigzag.reshape((64),order='F').astype('int')
 #índice para repor ordem original de array 1D em zigzag
+ind_O = zigzag.reshape((64),order='F').astype('int')
+#índice para ordenar valores de array 1D em zigzag
 ind_Z = np.argsort(ind_O)
 
 

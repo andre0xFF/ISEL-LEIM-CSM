@@ -1,10 +1,11 @@
-from numpy import array
+from cv2 import COLOR_BGR2YCrCb
+from cv2 import COLOR_YCrCb2BGR
+from cv2 import IMWRITE_JPEG_QUALITY
 from cv2 import cvtColor
 from cv2 import imread
 from cv2 import imwrite
-from cv2 import IMWRITE_JPEG_QUALITY
-from cv2 import COLOR_BGR2YCrCb
-from cv2 import COLOR_YCrCb2BGR
+
+from numpy import array
 
 
 def encode(image: array) -> array:
