@@ -23,16 +23,15 @@ def encode(block) -> ndarray:
     zigzag_index = argsort(original_index)
     elements = block.elements.copy().flatten(order="F")[zigzag_index]
 
+    # No need to start at index 0, that is the DC part
     ac_elements = [AC] * (sum(elements != 0) - 1)
+    elements_index = argwhere(elements != 0)
+    # zrl stands for zero run length
+    zrl = 0
 
-    zero_run_length = 0
-
-    for i in range(1, len(elements)):
-        if elements[i] == 0:
-            zero_run_length += 1
-        else:
-            ac_elements[i - zero_run_length - 1] = AC(zero_run_length, elements[i])
-            zero_run_length = 0
+    for i in range(1, len(elements_index)):
+        zrl = elements_index[i, 0] - elements_index[i - 1, 0] - 1
+        ac_elements[i - 1] = AC(zrl, elements[elements_index[i, 0]])
 
     return ac_elements
 

@@ -1,8 +1,8 @@
 import numpy as np
 
-from . import ycc
-from . import quantification
 from . import dct
+from . import quantification
+from . import ycc
 from .block import Block
 
 
@@ -13,6 +13,11 @@ class JPEG:
         self.__image = np.copy(image)
         self.__quality = quality
         self.__stream = ""
+
+    # TODO: Read and decode stream
+    @classmethod
+    def from_stream(cls, stream: str):
+        pass
 
     def __crop_image(self):
         total_lines, total_columns, layers = self.__image.shape
@@ -81,3 +86,7 @@ class JPEG:
                 blocks[blocks_row, blocks_column] = Block(elements)
 
         return blocks
+
+    @property
+    def stream(self):
+        return self.__stream
