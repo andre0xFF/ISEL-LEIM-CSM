@@ -10,7 +10,7 @@ class Stream:
 
     def __init__(self, stream: str=""):
         self.__regular_text = stream
-        self.__pretty_text = ""
+        self.__pretty_text = stream
 
     @property
     def regular(self):
@@ -22,9 +22,7 @@ class Stream:
 
     def join(self, stream):
         self.__regular_text = "{}{}".format(self.__regular_text, stream.regular)
-
-        if self.__pretty_text != "" and stream.pretty != "":
-            self.__pretty_text = "{} {}".format(self.__pretty_text, stream.pretty)
+        self.__pretty_text = "{} {}".format(self.__pretty_text, stream.pretty)
 
         return self
 

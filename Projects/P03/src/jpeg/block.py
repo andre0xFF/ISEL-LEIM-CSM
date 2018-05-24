@@ -1,10 +1,10 @@
-from numpy import copy, ones
+from numpy import copy
 from numpy import ndarray
 
-from .entropic_coding import Stream
-from . import entropic_coding
 from . import dpcm
+from . import entropic_coding
 from . import rlc
+from .entropic_coding import Stream
 
 
 class Block:
@@ -29,6 +29,10 @@ class Block:
     @property
     def elements(self):
         return copy(self.__elements)
+
+    @elements.setter
+    def elements(self, value):
+        self.__elements = value
 
     @property
     def dc(self):
