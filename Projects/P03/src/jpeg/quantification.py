@@ -33,8 +33,8 @@ def encode(block: Block, quality: float=50) -> Block:
     return block
 
 
-def decode(block: Block, factor: float=50) -> Block:
+def decode(block: Block, quality: float=50) -> Block:
     k = get_matrix()
-    block.elements = block.elements * (k * quality_factor(factor))
+    block.elements = block.elements * (k * quality_factor(quality))
     return block
 

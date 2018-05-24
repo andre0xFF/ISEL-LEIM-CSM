@@ -1,6 +1,6 @@
 import numpy as np
 
-from jpeg import Block
+from jpeg import Block, AC, DC, entropic_coding
 from jpeg import quantification
 
 
@@ -27,7 +27,7 @@ def test_quantification():
     print("Decoded block: \n{}".format(decoded))
 
 
-def test_dc_ac():
+def test_block():
     block_0 = Block(np.array([
         [80, 0, 0, 0, 0, 0, 0, 0, 0],
         [1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -62,31 +62,54 @@ def test_dc_ac():
     ]))
 
     print("[INFO] Encoding")
-    block_0.dpcm_encode(None)
-    block_1.dpcm_encode(block_0)
-    block_2.dpcm_encode(block_1)
+    stream_0 = block_0.encode(None)
+    stream_1 = block_1.encode(block_0)
+    stream_2 = block_2.encode(block_1)
 
-    block_0.rlc_encode()
-    block_1.rlc_encode()
-    block_2.rlc_encode()
+    print("Stream 0: {}".format(stream_0))
+    print("Stream 1: {}".format(stream_1))
+    print("Stream 2: {}".format(stream_2))
 
-    print("Block 0 Stream: {}".format(block_0.stream))
-    print("Block 1 Stream: {}".format(block_1.stream))
-    print("Block 2 Stream: {}".format(block_2.stream))
+    stream_0.join(stream_1).join(stream_2)
 
-    print("[INFO] Decoding")
-    dc_0, ac_0, elements = Block.decode(block_0.stream)
-    dc_1, ac_1, elements = Block.decode(block_1.stream)
-    dc_2, ac_2, elements = Block.decode(block_2.stream)
+    while stream_0.regular != "":
+        print("Current stream: {}".format(stream_0))
+        dc, ac, stream_0 = entropic_coding.decode(stream_0, Block.size * Block.size)
 
-    print("Stream 0 DC: {}".format(dc_0))
-    print("Stream 1 DC: {}".format(dc_1))
-    print("Stream 2 DC: {}".format(dc_2))
+        print("Decoded DC: {}".format(dc))
+        print("Decoded AC: {}".format(ac))
+
+    stream_0 = block_0.encode(None)
+
+    block_0, stream_0 = Block.decode(None, stream_0)
+    block_1, stream_1 = Block.decode(block_0, stream_1)
+    block_2, stream_2 = Block.decode(block_1, stream_2)
+
+    print("Decoded Block 0: \n{}".format(block_0))
+    print("Decoded Block 1: \n{}".format(block_1))
+    print("Decoded Block 2: \n{}".format(block_2))
+
+
+def test_ac():
+    dc = DC(-2)
+    ac = AC(np.array([0, 0, 3]), np.array([1, 1, -1]))
+
+    print("Original DC: {}".format(dc))
+    print("Original AC: {}".format(ac))
+
+    stream = entropic_coding.encode(dc, ac)
+
+    print("Encoded stream: {}".format(stream))
+
+    dc, ac, stream = entropic_coding.decode(stream, Block.size * Block.size)
+
+    print("Decoded DC: {}".format(dc))
+    print("Decoded AC: {}".format(ac))
+
+    print("Decoded stream: {}".format(stream))
 
 
 if __name__ == "__main__":
-    print("> Test quantification")
-    test_quantification()
+    test_block()
+    # test_ac()
 
-    print("\n> Test DC")
-    test_dc_ac()
