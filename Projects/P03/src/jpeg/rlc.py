@@ -34,8 +34,12 @@ def encode(block) -> AC:
     for i in range(len(zrls)):
         total_zeros = sum(elements[j: idx[i]] == 0)
 
+        # TODO: What happens when there is more then 15 zeros in ZRL?
         if total_zeros > 0:
             zrls[i] = total_zeros
+
+        if total_zeros > 15:
+            print("[WARNING] ZRL higher then 15, ({}, {})".format(total_zeros, abs(amplitudes[i])))
 
         j = idx[i]
 

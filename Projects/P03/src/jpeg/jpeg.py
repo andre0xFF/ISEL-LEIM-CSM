@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 from .entropic_coding import Stream
 from . import dct
@@ -9,7 +10,7 @@ from .block import Block
 
 class JPEG:
 
-    header_size = 16
+    header_size = 16 * 2
     total_layers = 3
 
     def __init__(self, image: np.ndarray, quality: int = 50):
@@ -21,8 +22,7 @@ class JPEG:
 
     @classmethod
     def from_stream(cls, stream: str):
-        cls.__stream = np.copy(stream)
-        cls.decode(stream)
+        cls.__header, cls.__stream = cls.__decode_header(stream)
 
         return cls
 
@@ -46,6 +46,7 @@ class JPEG:
         self.__crop_image()
         self.__make_subsample()
         self.__image = ycc.encode(self.__image)
+        # self.__subtract_128()
 
         for i in range(JPEG.total_layers):
             blocks = self.__make_blocks(self.__image[:, :, i])
@@ -62,49 +63,69 @@ class JPEG:
                     block.encode(previous_block)
                     self.__stream.join(block.stream)
 
-                    previous_block = block
+                    previous_block = copy.deepcopy(block)
 
-    @classmethod
-    def decode(cls, stream: str):
-        header = stream[:JPEG.header_size * 2 + 1]
-        stream = stream[JPEG.header_size * 2 + 1:]
+    def decode(self):
+        if self.__header == "":
+            return
 
-        rows = np.int(header[JPEG.header_size + 1], 2)
-        columns = np.int(header[JPEG.header_size: JPEG.header_size * 2 + 1], 2)
+        if self.__stream == "":
+            return
 
-        total_blocks_horizontal = np.int(columns / Block.size)
-        total_blocks_vertical = np.int(rows / Block.size)
+        stream = copy.deepcopy(self.__stream)
+        rows = int(self.__header[0: int(JPEG.header_size / 2)], 2)
+        columns = int(self.__header[int(JPEG.header_size / 2): JPEG.header_size], 2)
 
-        image = np.zeros((
-            JPEG.total_layers,
-            total_blocks_horizontal * Block.size,
-            total_blocks_vertical * Block.size,
-        ))
+        image = np.zeros(
+            (columns * Block.size, rows * Block.size, JPEG.total_layers),
+            dtype=np.uint8
+        )
 
         for i in range(JPEG.total_layers):
-            blocks = cls.__make_blocks(image[i])
             previous_block = None
 
-            for blocks_row in range(blocks.shape[0]):
-                for blocks_column in range(blocks.shape[1]):
+            for row in range(rows):
+                for column in range(columns):
+                    print("{}, {}, {}".format(i, row, column))
                     block, stream = Block.decode(previous_block, stream)
-                    blocks[blocks_row, blocks_column] = block
+                    previous_block = copy.deepcopy(block)
+
+                    block = quantification.decode(block)
+                    block = dct.decode(block)
+
                     image[
+                        row * Block.size: row * Block.size + Block.size,
+                        column * Block.size: column * Block.size + Block.size,
                         i,
-                        blocks_row * Block.size: blocks_row * Block.size + Block.size,
-                        blocks_column * Block.size: blocks_column * Block.size + Block.size
                     ] = block.elements
 
-                    previous_block = block
 
-        return JPEG(image)
+
+        # self.__add_128()
+        image = ycc.decode(image)
+        self.__image = image
 
     def __encode_header(self, rows: int, columns: int):
-        row_bits = np.binary_repr(rows).rjust(JPEG.header_size, "0")
-        column_bits = np.binary_repr(columns).rjust(JPEG.header_size, "0")
+        row_bits = np.binary_repr(rows).rjust(np.int(JPEG.header_size / 2), "0")
+        column_bits = np.binary_repr(columns).rjust(np.int(JPEG.header_size / 2), "0")
 
-        self.__header.join(Stream(row_bits))
-        self.__header.join(Stream(column_bits))
+        self.__header.add_prefix(row_bits)
+        self.__header.add_prefix(column_bits)
+
+    @staticmethod
+    def __decode_header(stream: str) -> (Stream, int, int, str):
+        header = Stream()
+        header.add_prefix(stream[0: np.int(JPEG.header_size)])
+
+        stream = stream[JPEG.header_size:]
+
+        return header, stream
+
+    def __subtract_128(self):
+        self.__image = self.__image - 128
+
+    def __add_128(self):
+        self.__image = self.__image + 128
 
     def __make_blocks(self, image_layer: np.ndarray):
         # Calculate the total number of blocks
@@ -141,4 +162,4 @@ class JPEG:
         final_stream = Stream()
         final_stream.join(self.__header).join(self.__stream)
 
-        return final_stream
+        return final_stream.regular

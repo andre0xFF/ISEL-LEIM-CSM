@@ -15,7 +15,7 @@ class Block:
         self.__elements = copy(elements)
         self.__dc = None
         self.__ac = None
-        self.__stream = None
+        self.__stream = Stream()
 
     def __getitem__(self, item):
         return self.__elements[item]

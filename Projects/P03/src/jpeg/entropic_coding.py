@@ -8,9 +8,10 @@ from .dc import DC
 
 class Stream:
 
-    def __init__(self, stream: str=""):
-        self.__regular_text = stream
-        self.__pretty_text = stream
+    def __init__(self, pretty=False):
+        self.__regular_text = ""
+        self.__pretty_text = ""
+        self.__enable_pretty = pretty
 
     @property
     def regular(self):
@@ -21,50 +22,88 @@ class Stream:
         return self.__pretty_text
 
     def join(self, stream):
-        self.__regular_text = "{}{}".format(self.__regular_text, stream.regular)
-        self.__pretty_text = "{} {}".format(self.__pretty_text, stream.pretty)
+        self.__regular_text = "{}{}".format(
+            self.__regular_text,
+            stream.regular
+        )
+
+        if not self.__enable_pretty:
+            return self
+
+        self.__pretty_text = "{this}{space}{new}".format(
+            this=self.__pretty_text,
+            space=" " if self.__pretty_text != "" else "",
+            new=stream.pretty
+        )
 
         return self
 
     def add(self, size_bits: str, signal_bits: str, amplitude_bits: str):
         if amplitude_bits == "0":
-            self.__regular_text = "{}{size}".format(
-                self.__regular_text,
+            self.__regular_text = "{stream}{size}".format(
+                stream=self.__regular_text,
                 size=size_bits
             )
-            self.__pretty_text = "{}{}{size}".format(
-                self.__pretty_text,
-                " " if self.__pretty_text != "" else "",
-                size=size_bits
+        else:
+            self.__regular_text = "{stream}{size}{signal}{amplitude}".format(
+                stream=self.__regular_text,
+                size=size_bits,
+                signal=signal_bits,
+                amplitude=amplitude_bits
             )
+
+        if not self.__enable_pretty:
             return
 
-        self.__regular_text = "{}{size}{signal}{amplitude}".format(
-            self.__regular_text,
-            size=size_bits,
-            signal=signal_bits,
-            amplitude=amplitude_bits
+        if amplitude_bits == "0":
+            self.__pretty_text = "{stream}{space}{size}".format(
+                stream=self.__pretty_text,
+                space=" " if self.__pretty_text != "" else "",
+                size=size_bits
+            )
+        else:
+            self.__pretty_text = "{stream}{space}{size} {signal} {amplitude}".format(
+                stream=self.__pretty_text,
+                space=" " if self.__pretty_text != "" else "",
+                size=size_bits,
+                signal=signal_bits,
+                amplitude=amplitude_bits
+            )
+
+    def add_prefix(self, prefix):
+        self.__regular_text = "{prefix}{stream}".format(
+            prefix=prefix,
+            stream=self.__regular_text
         )
-        self.__pretty_text = "{}{}{size} {signal} {amplitude}".format(
-            self.__pretty_text,
-            " " if self.__pretty_text != "" else "",
-            size=size_bits,
-            signal=signal_bits,
-            amplitude=amplitude_bits
+
+        if not self.__enable_pretty:
+            return
+
+        self.__pretty_text = "{prefix}{space}{stream}".format(
+            prefix=prefix,
+            space=" " if self.__pretty_text != "" else "",
+            stream=self.__pretty_text
         )
 
     def add_suffix(self, suffix: str):
-        self.__regular_text = "{}{suffix}".format(
-            self.__regular_text,
+        self.__regular_text = "{stream}{suffix}".format(
+            stream=self.__regular_text,
             suffix=suffix
         )
-        self.__pretty_text = "{} {suffix}".format(
-            self.__pretty_text,
+
+        if not self.__enable_pretty:
+            return
+
+        self.__pretty_text = "{stream} {suffix}".format(
+            stream=self.__pretty_text,
             suffix=suffix
         )
 
     def remove(self, size: int):
         self.__regular_text = self.__regular_text[size:]
+
+        if not self.__enable_pretty:
+            return
 
         if self.__pretty_text is None:
             return
@@ -106,7 +145,6 @@ k3 = {
     10: "11111110",
     11: "111111110",
 }
-
 k5 = {
     # (0, 0): "1010",
     (0, 1): "00",
@@ -269,7 +307,17 @@ k5 = {
     (15, 7): "1111111111111011",
     (15, 8): "1111111111111100",
     (15, 9): "1111111111111101",
-    (15, 10): "1111111111111110"
+    (15, 10): "1111111111111110",
+    # Extra keys
+    (16, 1): "00000000000000001",
+    (17, 1): "00000000000000010",
+    (18, 1): "00000000000000011",
+    (19, 1): "00000000000000100",
+    (20, 1): "00000000000000101",
+    (21, 1): "00000000000000110",
+    (22, 1): "00000000000000111",
+    (23, 1): "00000000000001000",
+    (24, 1): "00000000000001001",
 }
 
 
@@ -337,6 +385,7 @@ def decode(stream: Stream, total_elements: int) -> (DC, AC, Stream):
 
             dc = DC(amplitude, size)
             stream.remove(i + size)
+            break
 
     # AC stream
     zrls = zeros(total_elements, dtype=int)
@@ -344,7 +393,7 @@ def decode(stream: Stream, total_elements: int) -> (DC, AC, Stream):
     i = 0
     j = 0
 
-    while i < len(stream):
+    while i < len(stream) and stream[0: i] != eob:
         i += 1
 
         for k in k5:
