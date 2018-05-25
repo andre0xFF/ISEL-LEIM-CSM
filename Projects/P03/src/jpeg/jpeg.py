@@ -20,6 +20,8 @@ class JPEG:
         self.__stream = Stream()
         self.__header = Stream()
 
+        # self.__encoded_streams = []
+
     @classmethod
     def from_stream(cls, stream: str):
         cls.__header, cls.__stream = cls.__decode_header(stream)
@@ -63,6 +65,9 @@ class JPEG:
                     block.encode(previous_block)
                     self.__stream.join(block.stream)
 
+                    # TODO
+                    # self.__encoded_streams.append(block.stream)
+
                     previous_block = copy.deepcopy(block)
 
     def decode(self):
@@ -81,13 +86,22 @@ class JPEG:
             dtype=np.uint8
         )
 
+        # p = 0
+
         for i in range(JPEG.total_layers):
             previous_block = None
 
             for row in range(rows):
                 for column in range(columns):
-                    print("{}, {}, {}".format(i, row, column))
+                    # print("{}, {}, {}".format(i, row, column))
                     block, stream = Block.decode(previous_block, stream)
+                    # ###
+                    # block.encode(previous_block)
+                    # if self.__encoded_streams[p].regular != block.stream.regular:
+                    #     print("[ERROR]")
+                    # p += 1
+                    # ###
+
                     previous_block = copy.deepcopy(block)
 
                     block = quantification.decode(block)
