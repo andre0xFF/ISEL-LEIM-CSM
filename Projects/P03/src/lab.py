@@ -1,19 +1,23 @@
 from cv2 import imread, imwrite
+import cv2
 from time import clock
 from numpy import ndarray
-
+import matplotlib.pyplot as plt
 from jpeg import JPEG
+from jpeg import snr
+from jpeg import comp_rate
 
 
-def process(image: ndarray):
+def process(image: ndarray, horizontal_ratio: int, vertical_ratio: int, quality: int = 50):
+
     print("Encoding image with JPEG")
     t = clock()
 
-    image = JPEG(image=image)
-    image.encode()
+    image = JPEG(image, quality)
+    image.encode(horizontal_ratio, vertical_ratio)
 
     elapsed_time = clock() - t
-    print("Encoding time: {}".format(elapsed_time))
+    print("Encoding time: {}".format(round(elapsed_time, 2)) + " seconds")
 
     print("Decoding stream")
     t = clock()
@@ -21,7 +25,7 @@ def process(image: ndarray):
     image.decode()
 
     elapsed_time = clock() - t
-    print("Decoding time: {}".format(elapsed_time))
+    print("Decoding time: {}".format(round(elapsed_time, 2)) + " seconds")
 
     return image
 
@@ -30,14 +34,3 @@ def write_to_file(stream: str, filename: str):
     with open(filename, "w") as file:
         file.write(stream)
 
-
-if __name__ == "__main__":
-    input_path = "../data/raw/Lena.tif"
-    output_path = "../data/processed/Lena"
-
-    print("Reading from file: {}".format(input_path))
-    image = imread(input_path)
-    jpeg_image = process(image=image[:, :, :])
-
-    print("Writing to file: {}".format(output_path))
-    write_to_file(jpeg_image.stream, output_path)

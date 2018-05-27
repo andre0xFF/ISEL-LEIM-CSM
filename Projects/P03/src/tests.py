@@ -1,11 +1,12 @@
 from cv2 import IMWRITE_JPEG_QUALITY
 from cv2 import imread
 from cv2 import imwrite
-
+import cv2
 import numpy as np
-
-from jpeg import Block, AC, DC, entropic_coding, ycc
-from jpeg import quantification
+import matplotlib.pyplot as plt
+from jpeg import Block, AC, DC, entropic_coding
+from jpeg import quantification, ycc, snr, comp_rate
+import lab
 
 
 def test_quantification():
@@ -19,6 +20,8 @@ def test_quantification():
         [4, 4, -1, -2, -9, 0, 2, 4],
         [3, 1, 0, -4, -2, -1, 3, 1]
     ]))
+
+    print("Original block: \n{}".format(block))
 
     print("\n[INFO] Encoding")
     encoded = quantification.encode(block, 50)
@@ -97,7 +100,7 @@ def test_block():
     print("Decoded Block 2: \n{}".format(block_2))
 
 
-def test_ac():
+def test_dcac():
     print("\n[INFO] Generating DC and AC")
     dc = DC(-2)
     ac = AC(np.array([0, 0, 3]), np.array([1, 1, -1]))
@@ -110,7 +113,7 @@ def test_ac():
 
     print("Encoded stream: {}".format(stream))
 
-    print("\n[INFO] Decoding steam")
+    print("\n[INFO] Decoding stream")
     dc, ac, stream = entropic_coding.decode(stream, Block.size * Block.size)
 
     print("Decoded DC: {}".format(dc))
@@ -144,8 +147,58 @@ def test_ycc():
     imwrite("{0}/{1}".format(processed_data, filename), decoded_image, (IMWRITE_JPEG_QUALITY, 100))
 
 
+def test_jpeg(quality: float, horizontal_ratio: int, vertical_ratio: int):
+
+    print("Original Imagem vs. Implemented JPEG Algorithm: \n")
+
+    input_path = "../data/raw/Lena.tif"
+    output_path = "../data/processed/Lena"
+
+    print("Reading from file: {}".format(input_path))
+    image = imread(input_path)
+    jpeg_image = lab.process(image, horizontal_ratio, vertical_ratio, quality)
+
+    print("Writing to file: {}".format(output_path))
+    lab.write_to_file(jpeg_image.stream, output_path)
+
+    print("SNR = " + str(snr.calc_psnr(image, jpeg_image.image)) + " dB")
+    ratio, savings = comp_rate.calc_compression_rate(input_path, output_path)
+    print("Compression Ratio = " + str(ratio) + ":1")
+    print("Compression % = " + str(savings) + "%")
+    plt.figure(figsize=(5, 5))
+    plt.title("Implemented JPEG Algorithm")
+    plt.imshow(cv2.cvtColor(jpeg_image.image, cv2.COLOR_BGR2RGB))
+    plt.axis('off')
+    plt.show()
+
+
+def test_jpeg_cv2(quality: float):
+
+    print("\n \nOpenCV JPEG Algorithm vs. Implemented JPEG Algorithm: \n")
+
+    output_path = "../data/intermediate/Lena.ycc.raw.jpg"
+    input_path = "../data/raw/Lena.tif"
+
+    print("Reading from file: {}".format(input_path))
+    image = imread(input_path)
+    jpeg_image = imread(output_path)
+
+    print("SNR = " + str(snr.calc_psnr(image, jpeg_image)) + " dB")
+
+    ratio, savings = comp_rate.calc_compression_rate(input_path, output_path)
+    print("Compression Ratio = " + str(ratio) + ":1")
+    print("Compression % = " + str(savings) + "%")
+
+    plt.figure(figsize=(5, 5))
+    plt.title("OpenCV JPEG Algorithm")
+    plt.imshow(cv2.cvtColor(jpeg_image, cv2.COLOR_BGR2RGB))
+    plt.axis('off')
+    plt.show()
+
+
 if __name__ == "__main__":
-    test_ycc()
-    test_ac()
-    test_block()
+    #test_ycc()
+    #test_dcac()
+    test_jpeg(50, 8, 8)
+    #test_block()
 
