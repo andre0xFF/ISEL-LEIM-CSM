@@ -1,6 +1,7 @@
 import numpy as np
 import copy
-
+import cv2
+import matplotlib.pyplot as plt
 from .entropic_coding import Stream
 from . import dct
 from . import quantification
@@ -38,15 +39,34 @@ class JPEG:
                                     0: total_columns - excess_columns, i
                                 ]
 
-    # TODO
-    def __make_subsample(self):
-        self.__image = self.__image
+    def __apply_subsample(self, image: np.array, horizontal_ratio: int, vertical_ratio: int, sample_size: int = 4):
+        rows, columns = image.shape
+        x = 0
+        y = 0
+        for row in range(rows):
+            for col in range(columns):
+                if x < rows and y < columns:
+                    sub_matrix = np.ones((1, horizontal_ratio, vertical_ratio)) * image[x][y]
+                    image = self.__apply_block(image, sub_matrix, x, y, vertical_ratio)
+                    y += vertical_ratio
+            x += horizontal_ratio
+            y = 0
 
-    def encode(self):
+        return image
+
+    def __apply_block(self, matrix, block, line, col, dim):
+        matrix[line: line + dim, col: col + dim] = block
+        return matrix
+
+    def __make_subsample(self, horizontal_ratio: int, vertical_ratio: int):
+        for frame in range(1, 3):
+            self.__image[:, :, frame] = self.__apply_subsample(self.__image[:, :, frame], horizontal_ratio, vertical_ratio)
+
+    def encode(self, horizontal_ratio: int, vertical_ratio: int):
         self.__crop_image()
-        self.__make_subsample()
+        if horizontal_ratio != 1:
+            self.__make_subsample(horizontal_ratio, vertical_ratio)
         self.__image = ycc.encode(self.__image)
-        # self.__subtract_128()
 
         for i in range(JPEG.total_layers):
             blocks = self.__make_blocks(self.__image[:, :, i])
@@ -58,7 +78,7 @@ class JPEG:
             for row in range(blocks.shape[0]):
                 for column in range(blocks.shape[1]):
                     block = dct.encode(blocks[row, column])
-                    block = quantification.encode(blocks[row, column])
+                    block = quantification.encode(blocks[row, column], self.__quality)
 
                     block.encode(previous_block)
                     self.__stream.join(block.stream)
@@ -66,6 +86,7 @@ class JPEG:
                     previous_block = copy.deepcopy(block)
 
     def decode(self):
+
         if self.__header == "":
             return
 
@@ -87,7 +108,6 @@ class JPEG:
             for row in range(rows):
                 for column in range(columns):
                     block, stream = Block.decode(previous_block, stream)
-
                     previous_block = copy.deepcopy(block)
 
                     block = quantification.decode(block)
@@ -99,9 +119,6 @@ class JPEG:
                         i,
                     ] = block.elements
 
-
-
-        # self.__add_128()
         image = ycc.decode(image)
         self.__image = image
 
@@ -163,3 +180,7 @@ class JPEG:
         final_stream.join(self.__header).join(self.__stream)
 
         return final_stream.regular
+
+    @property
+    def image(self):
+        return self.__image

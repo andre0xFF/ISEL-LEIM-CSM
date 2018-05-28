@@ -1,7 +1,7 @@
 from numpy import abs
-from numpy import ndarray, zeros, ones
 from numpy import binary_repr
 from numpy import int
+from numpy import ndarray, zeros
 from numpy import sum
 
 
@@ -39,6 +39,7 @@ class AC:
                 i += self.__zero_run_lengths[j]
 
             elements[i] = self.__amplitudes[j]
+
             j += 1
             i += 1
 

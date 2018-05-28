@@ -38,8 +38,8 @@ def encode(block) -> AC:
         if total_zeros > 0:
             zrls[i] = total_zeros
 
-        if total_zeros > 15:
-            print("[WARNING] ZRL higher then 15, ({}, {})".format(total_zeros, abs(amplitudes[i])))
+        # if total_zeros > 15:
+        #     print("[WARNING] ZRL higher then 15, ({}, {})".format(total_zeros, abs(amplitudes[i])))
 
         j = idx[i]
 

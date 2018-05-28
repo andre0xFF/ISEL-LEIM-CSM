@@ -318,6 +318,7 @@ k5 = {
     (22, 1): "b0000000000000111",
     (23, 1): "b0000000000001000",
     (24, 1): "b0000000000001001",
+
 }
 
 
@@ -349,11 +350,29 @@ def encode(dc: DC, ac: AC) -> Stream:
     sizes = ac.sizes
 
     for i in range(len(amplitudes)):
-        size_bits = k5.get((zrls[i], sizes[i]))
-        signal_bits = generate_signal_bits(amplitudes[i])
-        amplitude_bits = generate_amplitude_bits(amplitudes[i])
 
-        stream.add(size_bits, signal_bits, amplitude_bits)
+        if zrls[i] > 15:
+            n_zeros = zrls[i]
+            while n_zeros > 0:
+                if n_zeros > 15:
+                    size_bits = k5.get((15, 0))
+                    signal_bits = generate_signal_bits(0)
+                    amplitude_bits = generate_amplitude_bits(0)
+                else:
+                    size_bits = k5.get((n_zeros, sizes[i]))
+                    signal_bits = generate_signal_bits(amplitudes[i])
+                    amplitude_bits = generate_amplitude_bits(amplitudes[i])
+
+                stream.add(size_bits, signal_bits, amplitude_bits)
+                n_zeros -= 15
+        else:
+            size_bits = k5.get((zrls[i], sizes[i]))
+            if size_bits is None:
+                size_bits = k5.get((0, 1))
+            signal_bits = generate_signal_bits(amplitudes[i])
+            amplitude_bits = generate_amplitude_bits(amplitudes[i])
+
+            stream.add(size_bits, signal_bits, amplitude_bits)
 
     # EOB stream
     stream.add_suffix(eob)
