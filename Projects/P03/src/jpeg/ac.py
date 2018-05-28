@@ -1,7 +1,7 @@
 from numpy import abs
-from numpy import ndarray, zeros, ones
 from numpy import binary_repr
 from numpy import int
+from numpy import ndarray, zeros
 from numpy import sum
 
 
@@ -15,7 +15,6 @@ class AC:
         for i in range(self.__amplitudes.shape[0]):
             bits = binary_repr(abs(self.__amplitudes[i]))
             self.__sizes[i] = int(len(bits))
-
 
     @property
     def zero_run_lengths(self):
@@ -44,7 +43,6 @@ class AC:
             j += 1
             i += 1
 
-        print(elements)
         return elements
 
     @property
