@@ -197,8 +197,7 @@ def test_jpeg_cv2(quality: float):
 
 
 if __name__ == "__main__":
-    #test_ycc()
-    #test_dcac()
+    # test_ycc()
+    # test_dcac()
     test_jpeg(50, 8, 8)
-    #test_block()
-
+    # test_block()
