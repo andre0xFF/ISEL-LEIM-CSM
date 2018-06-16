@@ -1,9 +1,11 @@
 from cv2 import imread
-from numpy import array
+from numpy import array, ndarray
+from numpy import logical_not
 
-from video import InterFrame
-from video import IntraFrame
-from video import FrameEncoder
+from video import ycc
+from video.frames import InterFrame
+from video.frames import IntraFrame
+from video.encoders import FrameEncoder
 
 DATA_PATH = "../data"
 RAW_DATA = "{}/raw".format(DATA_PATH)
@@ -14,15 +16,16 @@ PROCESSED_DATA_PATH = "{}/processed".format(DATA_PATH)
 def main(folder: str, filenames: list):
     intra_frames = exercise_01(folder, filenames)
     inter_frames = exercise_02(folder, intra_frames)
-    exercise_03(intra_frames[0], inter_frames)
+    exercise_03(folder, intra_frames[0], inter_frames)
 
 
-def exercise_01(folder: str, filenames: list) -> array:
+def exercise_01(folder: str, filenames: list) -> ndarray:
     intra_frames = array([IntraFrame] * len(filenames))
 
     for i in range(len(filenames)):
         path = "{0}/{1}/{2}".format(RAW_DATA, folder, filenames[i])
         image = imread(path)
+        image = ycc.encode(image)
         intra_frames[i] = IntraFrame(image, i)
 
         path = "{0}/exercise_01/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, intra_frames[i])
@@ -31,12 +34,12 @@ def exercise_01(folder: str, filenames: list) -> array:
     return intra_frames
 
 
-def exercise_02(folder: str, intra_frames: array) -> array:
+def exercise_02(folder: str, intra_frames: ndarray) -> ndarray:
     inter_frames = array([IntraFrame] * (len(intra_frames) - 1))
 
     for i in range(1, len(intra_frames)):
         j = i - 1
-        inter_frames[j] = InterFrame(intra_frames[i], intra_frames[0], i)
+        inter_frames[j] = InterFrame.from_intra_frame(intra_frames[i], intra_frames[0], i)
 
         path = "{0}/exercise_02/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, inter_frames[j])
         inter_frames[j].write(path, 100)
@@ -44,10 +47,14 @@ def exercise_02(folder: str, intra_frames: array) -> array:
     return inter_frames
 
 
-def exercise_03(intra_frame: IntraFrame, inter_frames: array):
+def exercise_03(folder: str, intra_frame: IntraFrame, inter_frames: ndarray):
     encoder = FrameEncoder()
 
-    encoder.encode(intra_frame, inter_frames[0])
+    predicted_frame, error, frame_vectors = encoder.encode(intra_frame, inter_frames[0])
+    reconstructed_frame = encoder.decode(error, frame_vectors)
+
+    path = "{0}/exercise_03/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, inter_frames[0])
+    reconstructed_frame.write(path, 100)
 
 
 if __name__ == "__main__":

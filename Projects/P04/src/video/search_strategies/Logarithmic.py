@@ -1,5 +1,5 @@
-from . import ISearchStrategy
+from . import SearchStrategy
 
 
-class Logarithmic(ISearchStrategy):
+class Logarithmic(SearchStrategy):
     pass
