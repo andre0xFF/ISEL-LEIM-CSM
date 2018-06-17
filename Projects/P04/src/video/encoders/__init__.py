@@ -1,1 +1,1 @@
-from .FrameEncoder import FrameEncoder
+from .frame_encoder import FrameEncoder

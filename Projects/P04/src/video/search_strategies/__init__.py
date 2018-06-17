@@ -1,4 +1,3 @@
-from .SearchStrategy import SearchStrategy
-from .Logarithmic import Logarithmic
-from .Orthogonal import Orthogonal
-from .ThreeSteps import ThreeSteps
+from .search_strategy import SearchStrategy
+from .search_strategy import Iterative
+from .exhaustive import Exhaustive
