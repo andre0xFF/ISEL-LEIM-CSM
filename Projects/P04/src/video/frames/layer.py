@@ -15,7 +15,7 @@ class Layer:
         return self.__pixels.__str__()
 
     def __sub__(self, other):
-        if self.__blocks is not None:
+        if self.__blocks is not None and other.__blocks is not None:
             self.__blocks - other.__blocks
 
         return self.__pixels - other.__pixels

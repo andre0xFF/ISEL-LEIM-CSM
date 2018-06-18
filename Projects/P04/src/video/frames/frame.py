@@ -33,6 +33,10 @@ class Frame:
     def size(self):
         return self.__pixels.size
 
+    @property
+    def pixels(self):
+        return self.__pixels
+
     def write(self, path: str, quality: int):
         imwrite(path, self.__pixels, (IMWRITE_JPEG_QUALITY, quality))
 

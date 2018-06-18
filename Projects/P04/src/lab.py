@@ -28,6 +28,7 @@ def exercise_01(folder: str, filenames: list) -> ndarray:
         intra_frames[i] = YCbCrFrame(image, i)
 
         path = "{0}/exercise_01/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, intra_frames[i].index)
+        print("[EX1] Writing to {}".format(path))
         intra_frames[i].write(path, 100)
 
     return intra_frames
@@ -41,6 +42,7 @@ def exercise_02(folder: str, intra_frames: ndarray) -> ndarray:
         inter_frames[j] = YCbCrFrame(intra_frames[i] - intra_frames[0], i)
 
         path = "{0}/exercise_02/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, inter_frames[j].index)
+        print("[EX2] Writing to {}".format(path))
         inter_frames[j].write(path, 100)
 
     return inter_frames
@@ -53,15 +55,24 @@ def exercise_03(folder: str, intra_frame: YCbCrFrame, inter_frames: ndarray):
 
     encoder = FrameEncoder()
 
-    predicted_frame, error = encoder.encode(intra_frame, inter_frames[0])
-    # reconstructed_frame = encoder.decode(error, frame_vectors)
+    predicted_frame, vectors, error_frame = encoder.encode(intra_frame, inter_frames[0])
 
+    path = "{0}/exercise_03/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, predicted_frame.index)
+    print("[EX3] Writing to {}".format(path))
+    predicted_frame.write(path, 100)
+
+    path = "{0}/exercise_03/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, error_frame.index)
+    print("[EX3] Writing to {}".format(path))
+    error_frame.write(path, 100)
+
+
+    # reconstructed_frame = encoder.decode(error, frame_vectors)
     # path = "{0}/exercise_03/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, inter_frames[0].index)
     # reconstructed_frame.write(path, 100)
 
 
 if __name__ == "__main__":
-    ball_path = "bola_seq"
+    ball_folder = "bola_seq"
 
     ball_files = [
         "bola_1.tiff",
@@ -93,4 +104,4 @@ if __name__ == "__main__":
         "car11.bmp",
     ]
 
-    main(ball_path, ball_files)
+    main(ball_folder, ball_files)
