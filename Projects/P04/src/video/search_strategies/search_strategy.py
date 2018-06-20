@@ -3,6 +3,7 @@ from math import inf
 from numpy import argwhere, min
 from numpy import array, ndarray
 from sklearn.metrics import mean_squared_error as error
+# from sklearn.metrics import median_absolute_error as error
 
 from ..frames import Block
 from ..frames import Layer

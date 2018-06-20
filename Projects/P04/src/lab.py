@@ -65,10 +65,11 @@ def exercise_03(folder: str, intra_frame: YCbCrFrame, inter_frames: ndarray):
     print("[EX3] Writing to {}".format(path))
     error_frame.write(path, 100)
 
+    reconstructed_frame = encoder.decode(intra_frame, error_frame, vectors)
 
-    # reconstructed_frame = encoder.decode(error, frame_vectors)
-    # path = "{0}/exercise_03/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, inter_frames[0].index)
-    # reconstructed_frame.write(path, 100)
+    path = "{0}/exercise_03/{1}/{2}.jpg".format(PROCESSED_DATA_PATH, folder, reconstructed_frame.index)
+    print("[EX3] Writing to {}".format(path))
+    reconstructed_frame.write(path, 100)
 
 
 if __name__ == "__main__":

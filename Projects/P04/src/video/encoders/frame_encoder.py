@@ -1,4 +1,4 @@
-from numpy import array, zeros, int
+from numpy import array, zeros, int, ndarray
 
 from . import Vectors
 from ..frames import Block
@@ -10,7 +10,7 @@ class FrameEncoder:
     def __init__(self):
         self.__search_strategy = Exhaustive()
 
-    def encode(self, previous_frame: YCbCrFrame, frame: YCbCrFrame):
+    def encode(self, previous_frame: YCbCrFrame, frame: YCbCrFrame) -> (YCbCrFrame, ndarray, YCbCrFrame):
         layers = frame.layers
         previous_layers = previous_frame.layers
         predicted_image = zeros(frame.size, dtype=int).reshape(frame.shape)
@@ -49,6 +49,22 @@ class FrameEncoder:
 
         return predicted_frame, vectors, error_frame
 
-    def decode(self, frame: YCbCrFrame, error: array) -> YCbCrFrame:
-        # TODO
-        pass
+    def decode(self, previous_frame: YCbCrFrame, error_frame: YCbCrFrame, vectors: ndarray) -> YCbCrFrame:
+        previous_layers = previous_frame.layers
+        predicted_image = zeros(previous_frame.size, dtype=int).reshape(previous_frame.shape)
+
+        for l in range(previous_layers.shape[0]):
+            previous_blocks = previous_layers[l].blocks
+            block_size = previous_layers[l].block_size
+
+            for r in range(previous_blocks.shape[0]):
+                for c in range(previous_blocks.shape[1]):
+                    r2 = r / previous_blocks.shape[1] - c
+                    r3, c3 = vectors[l][r2, 2: 4]
+                    r4 = r3 + block_size
+                    c4 = c3 + block_size
+                    predicted_image[r3: r4, c3: c4, l] = previous_blocks[r, c].pixels
+
+        predicted_frame = YCbCrFrame(error_frame.pixels + predicted_image, previous_frame.index + 1)
+
+        return predicted_frame

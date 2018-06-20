@@ -56,6 +56,7 @@ class Layer:
 
                 self.__blocks[r, c] = Block(self.__pixels[r1: r2, c1: c2], (r1, c1), (r, c), self.__block_size)
 
+
 class LuminanceLayer(Layer):
     BLOCK_SIZE = 16
 
